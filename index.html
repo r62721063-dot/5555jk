@@ -1,120 +1,227 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Império do Dinheiro — Virar Bilionário</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-</head>
-<body class="bg-gray-900 text-white">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-emerald-400">Império do Dinheiro</h1>
-            <div class="flex items-center space-x-4">
-                <button id="prestige-btn" class="bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-lg">
-                    Magnata Global
-                </button>
-                <button id="menu-btn" class="p-2 rounded-full hover:bg-gray-800">
-                    <i data-feather="menu"></i>
-                </button>
-            </div>
-        </header>
+import React, { useRef, useEffect } from "react";
 
-        <!-- Main Game Area -->
-        <main>
-            <!-- Money Display -->
-            <div class="text-center mb-8">
-                <div class="text-5xl font-bold text-emerald-400 mb-2" id="money-display">$0</div>
-                <div class="text-xl text-gray-400" id="rps-display">$0 por segundo</div>
-            </div>
+// Quadrado arrastável com física simples (grávit, colisão com chão, arremesso) // Uso: importe esse componente em uma aplicação React (CRA, Vite, Next) e renderize <DragSquareGame /> // Estilização usa Tailwind (container centrado). O canvas é usado para física + render.
 
-            <!-- Main Click Button -->
-            <div class="flex justify-center mb-12">
-                <button id="click-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-2xl font-bold py-6 px-12 rounded-full shadow-lg transition-transform hover:scale-105">
-                    GERAR DINHEIRO
-                </button>
-            </div>
+export default function DragSquareGame() { const canvasRef = useRef(null); const stateRef = useRef({}); // guarda estado mutável para animação
 
-            <!-- Tabs -->
-            <div class="flex border-b border-gray-700 mb-6">
-                <button class="tab-btn active py-2 px-4 border-b-2 border-emerald-400" data-tab="businesses">
-                    Empreendimentos
-                </button>
-                <button class="tab-btn py-2 px-4" data-tab="upgrades">
-                    Melhorias
-                </button>
-                <button class="tab-btn py-2 px-4" data-tab="prestige">
-                    Prestígio
-                </button>
-                <button class="tab-btn py-2 px-4" data-tab="achievements">
-                    Conquistas
-                </button>
-            </div>
+useEffect(() => { const canvas = canvasRef.current; const ctx = canvas.getContext('2d'); const DPR = window.devicePixelRatio || 1;
 
-            <!-- Tab Content -->
-            <div id="businesses-tab" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="businesses-container">
-                    <!-- Businesses will be added here by JavaScript -->
-                </div>
-            </div>
+const width = 800;
+const height = 480;
+canvas.width = width * DPR;
+canvas.height = height * DPR;
+canvas.style.width = width + 'px';
+canvas.style.height = height + 'px';
+ctx.scale(DPR, DPR);
 
-            <div id="upgrades-tab" class="tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="upgrades-container">
-                    <!-- Upgrades will be added here by JavaScript -->
-                </div>
-            </div>
+// física e entidade
+const square = {
+  x: 120,
+  y: 50,
+  size: 48,
+  vx: 0,
+  vy: 0,
+  isDragging: false,
+};
 
-            <div id="prestige-tab" class="tab-content hidden">
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h2 class="text-2xl font-bold text-amber-400 mb-4">Magnata Global</h2>
-                    <p class="mb-4">Reinicie seu império para ganhar pontos de prestígio e aumentar permanentemente sua produção!</p>
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <p class="text-gray-400">Pontos de prestígio atuais:</p>
-                            <p class="text-2xl font-bold text-amber-400" id="prestige-points">0</p>
-                        </div>
-                        <div>
-                            <p class="text-gray-400">Bônus de produção:</p>
-                            <p class="text-2xl font-bold text-amber-400" id="prestige-bonus">1x</p>
-                        </div>
-                    </div>
-                    <button id="prestige-confirm-btn" class="w-full bg-amber-600 hover:bg-amber-700 py-3 px-6 rounded-lg font-bold">
-                        Reiniciar Império
-                    </button>
-                </div>
-            </div>
+const ground = {
+  y: height - 64,
+  height: 64,
+};
 
-            <div id="achievements-tab" class="tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="achievements-container">
-                    <!-- Achievements will be added here by JavaScript -->
-                </div>
-            </div>
-        </main>
+const physics = {
+  gravity: 1300, // px/s^2
+  friction: 0.999, // leve
+  restitution: 0.35, // quique
+};
 
-        <!-- Event Notification -->
-        <div id="event-notification" class="fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hidden">
-            <div class="flex items-center">
-                <i data-feather="alert-circle" class="mr-2"></i>
-                <span id="event-message"></span>
-            </div>
-        </div>
+// para estimar velocidade do arremesso usamos últimos pontos do ponteiro
+const pointerHistory = [];
+const maxHistory = 6; // últimas posições
 
-        <!-- Click Effect -->
-        <div id="click-effect" class="absolute pointer-events-none text-emerald-400 font-bold text-xl hidden">+$1</div>
-    </div>
+stateRef.current = { square, ground, physics, pointerHistory };
 
-    <!-- Scripts -->
-    <script src="js/app.js"></script>
-    <script src="js/save.js"></script>
-    <script src="js/prestige.js"></script>
-    <script src="js/events.js"></script>
-    <script>
-        feather.replace();
-    </script>
-<script src="https://huggingface.co/deepsite/deepsite-badge.js"></script>
-</body>
-</html>
+// util helpers
+function clear() {
+  ctx.clearRect(0, 0, width, height);
+}
+
+function draw() {
+  // fundo
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, width, height);
+
+  // chão
+  ctx.fillStyle = '#0ea5a4';
+  ctx.fillRect(0, ground.y, width, ground.height);
+
+  // quadrado
+  ctx.save();
+  ctx.fillStyle = '#f97316';
+  ctx.fillRect(square.x, square.y, square.size, square.size);
+  ctx.restore();
+
+  // sombra simples
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(square.x + 6, ground.y - 6, square.size, 6);
+
+  // info (opcional)
+  ctx.fillStyle = '#e6e6e6';
+  ctx.font = '12px monospace';
+  ctx.fillText(`vx: ${square.vx.toFixed(1)}  vy: ${square.vy.toFixed(1)}`, 10, 18);
+}
+
+let lastTime = performance.now();
+
+function step(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.032); // segundos
+  lastTime = now;
+
+  updatePhysics(dt);
+  clear();
+  draw();
+  requestAnimationFrame(step);
+}
+
+function updatePhysics(dt) {
+  // se arrastando, o quadrado acompanha o ponteiro e não sofre física
+  if (!square.isDragging) {
+    // aplicar gravidade
+    square.vy += physics.gravity * dt;
+    square.vx *= physics.friction;
+
+    square.x += square.vx * dt;
+    square.y += square.vy * dt;
+
+    // colisão com chão
+    const bottom = square.y + square.size;
+    if (bottom >= ground.y) {
+      // coloca no chão
+      square.y = ground.y - square.size;
+
+      // se estava indo para baixo, inverte velocidade Y com restituição
+      if (square.vy > 0) {
+        square.vy = -square.vy * physics.restitution;
+
+        // perda extra se quique muito pequeno
+        if (Math.abs(square.vy) < 60) {
+          square.vy = 0;
+        }
+      }
+
+      // leve arrasto horizontal quando no chão
+      square.vx *= 0.9;
+    }
+
+    // limites laterais
+    if (square.x < 0) {
+      square.x = 0;
+      square.vx = -square.vx * 0.45;
+    }
+    if (square.x + square.size > width) {
+      square.x = width - square.size;
+      square.vx = -square.vx * 0.45;
+    }
+  }
+}
+
+// eventos do ponteiro (funciona com mouse e touch)
+function getPointerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const p = e.touches ? e.touches[0] : e;
+  return {
+    x: (p.clientX - rect.left),
+    y: (p.clientY - rect.top),
+    t: performance.now(),
+  };
+}
+
+function pointerDown(e) {
+  e.preventDefault();
+  const p = getPointerPos(e);
+  // detecta se o ponteiro caiu sobre o quadrado
+  if (p.x >= square.x && p.x <= square.x + square.size && p.y >= square.y && p.y <= square.y + square.size) {
+    square.isDragging = true;
+    square.vx = 0;
+    square.vy = 0;
+    pointerHistory.length = 0;
+    pointerHistory.push(p);
+  }
+}
+
+function pointerMove(e) {
+  if (!square.isDragging) return;
+  e.preventDefault();
+  const p = getPointerPos(e);
+  // move o centro do quadrado para o ponteiro (ou mantém posição relativa)
+  square.x = p.x - square.size / 2;
+  square.y = p.y - square.size / 2;
+
+  pointerHistory.push(p);
+  if (pointerHistory.length > maxHistory) pointerHistory.shift();
+}
+
+function pointerUp(e) {
+  if (!square.isDragging) return;
+  e.preventDefault();
+  // calcula velocidade aproximada a partir do histórico
+  if (pointerHistory.length >= 2) {
+    const last = pointerHistory[pointerHistory.length - 1];
+    // procura o ponto mais antigo para estimar velocidade média
+    const first = pointerHistory[0];
+    const dx = last.x - first.x;
+    const dy = last.y - first.y;
+    const dt = (last.t - first.t) / 1000 || 0.001; // segundos
+
+    // velocidade em px/s
+    square.vx = dx / dt;
+    square.vy = dy / dt;
+  }
+
+  // depois de soltar aplicamos física
+  square.isDragging = false;
+  pointerHistory.length = 0;
+}
+
+// suporte a pointer events quando disponível (mais simples)
+if (window.PointerEvent) {
+  canvas.addEventListener('pointerdown', pointerDown);
+  window.addEventListener('pointermove', pointerMove);
+  window.addEventListener('pointerup', pointerUp);
+  window.addEventListener('pointercancel', pointerUp);
+} else {
+  // mouse
+  canvas.addEventListener('mousedown', pointerDown);
+  window.addEventListener('mousemove', pointerMove);
+  window.addEventListener('mouseup', pointerUp);
+  // touch
+  canvas.addEventListener('touchstart', pointerDown, { passive: false });
+  window.addEventListener('touchmove', pointerMove, { passive: false });
+  window.addEventListener('touchend', pointerUp);
+  window.addEventListener('touchcancel', pointerUp);
+}
+
+// inicia loop
+requestAnimationFrame(step);
+
+// cleanup
+return () => {
+  if (window.PointerEvent) {
+    canvas.removeEventListener('pointerdown', pointerDown);
+    window.removeEventListener('pointermove', pointerMove);
+    window.removeEventListener('pointerup', pointerUp);
+    window.removeEventListener('pointercancel', pointerUp);
+  } else {
+    canvas.removeEventListener('mousedown', pointerDown);
+    window.removeEventListener('mousemove', pointerMove);
+    window.removeEventListener('mouseup', pointerUp);
+    canvas.removeEventListener('touchstart', pointerDown);
+    window.removeEventListener('touchmove', pointerMove);
+    window.removeEventListener('touchend', pointerUp);
+    window.removeEventListener('touchcancel', pointerUp);
+  }
+};
+
+}, []);
+
+return ( <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4"> <div className="bg-slate-800 p-3 rounded-2xl shadow-2xl"> <div className="flex items-center justify-between mb-2"> <h2 className="text-white text-lg font-semibold">Quadrado com Física — pegue, arraste e jogue</h2> </div> <canvas ref={canvasRef} className="rounded-lg border border-slate-700" /> <p className="text-xs text-slate-300 mt-2">Toque / clique e arraste o quadrado; solte rápido para arremessar. Feito com física simples.</p> </div> </div> ); }
