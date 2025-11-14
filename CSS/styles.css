@@ -1,0 +1,120 @@
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    background-color: #111827;
+}
+
+/* Tab Styles */
+.tab-btn {
+    color: #9CA3AF;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: #E5E7EB;
+}
+
+.tab-btn.active {
+    color: #10B981;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Business Card Styles */
+.business-card {
+    background-color: #1F2937;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.business-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.business-card .progress-bar {
+    height: 6px;
+    background-color: #374151;
+    border-radius: 3px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.business-card .progress {
+    height: 100%;
+    background-color: #10B981;
+    width: 0%;
+    transition: width 0.5s linear;
+}
+
+/* Upgrade Card Styles */
+.upgrade-card {
+    background-color: #1F2937;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upgrade-card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Achievement Card Styles */
+.achievement-card {
+    background-color: #1F2937;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.achievement-card.locked {
+    opacity: 0.5;
+}
+
+.achievement-card .icon {
+    width: 40px;
+    height: 40px;
+    background-color: #374151;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes moneyPop {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    #money-display {
+        font-size: 2.5rem;
+    }
+    
+    #click-btn {
+        padding: 1rem 2rem;
+        font-size: 1.25rem;
+    }
+}
